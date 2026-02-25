@@ -79,10 +79,14 @@ async function generateCertificate(templateImagePath, participant, coords, outpu
     // Flip Y: screen top-left → PDF bottom-left
     const yAbs = imgHeight - (fieldConfig.yPercent / 100) * imgHeight;
 
-    // Center text horizontally around the click point
+    // Center text horizontally around the click point.
+    // For the Y axis: pdf-lib drawText uses the BASELINE as the y origin.
+    // For capital letters, the visual center is ~0.35 * fontSize above the baseline
+    // (cap height ≈ 0.72em, so cap center ≈ 0.36em above baseline).
+    // Using fontSize/2 (0.5) was placing text too high; 0.35 is more accurate.
     const textWidth = font.widthOfTextAtSize(textStr, fontSize);
     const x = xAbs - textWidth / 2;
-    const y = yAbs - fontSize / 2;
+    const y = yAbs - fontSize * 0.35;
 
     page.drawText(textStr, {
       x: Math.max(0, x),

@@ -17,11 +17,15 @@ async function sendEmail(recipientEmail, recipientName, certificatePath) {
     );
   }
 
+  // Gmail App Passwords are shown with spaces (e.g. "abcd efgh ijkl mnop") but
+  // SMTP authentication requires the password WITHOUT spaces.
+  const appPassword = process.env.EMAIL_PASS.replace(/\s+/g, "");
+
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
       user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
+      pass: appPassword,
     },
   });
 
@@ -54,6 +58,11 @@ async function sendEmail(recipientEmail, recipientName, certificatePath) {
       },
     ],
   };
+
+  // Verify SMTP connection/auth before attempting to send
+  await transporter.verify().catch((err) => {
+    throw new Error(`SMTP auth failed for ${process.env.EMAIL_USER}: ${err.message}`);
+  });
 
   const info = await transporter.sendMail(mailOptions);
   console.log(`  ✓ Email sent to ${recipientEmail} (${info.messageId})`);

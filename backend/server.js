@@ -245,6 +245,25 @@ app.post("/api/generate-and-send", async (req, res) => {
   }
 });
 
+// Test email credentials (SMTP verify only, no email sent)
+app.get("/api/test-email", async (req, res) => {
+  try {
+    const nodemailer = require("nodemailer");
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      return res.json({ success: false, message: "EMAIL_USER or EMAIL_PASS not set in .env" });
+    }
+    const appPassword = process.env.EMAIL_PASS.replace(/\s+/g, "");
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: { user: process.env.EMAIL_USER, pass: appPassword },
+    });
+    await transporter.verify();
+    res.json({ success: true, message: `✅ SMTP credentials valid for ${process.env.EMAIL_USER}` });
+  } catch (err) {
+    res.json({ success: false, message: `❌ SMTP Error: ${err.message}` });
+  }
+});
+
 // Download a generated certificate
 app.get("/api/download/:filename", (req, res) => {
   const filePath = path.join(__dirname, "output", req.params.filename);

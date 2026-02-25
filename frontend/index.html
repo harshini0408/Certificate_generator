@@ -137,7 +137,7 @@
     }
     .config-template-tabs .btn.active { background: #0f3460; color: white; }
 
-    .config-panel { display: flex; gap: 20px; flex-wrap: wrap; }
+    .config-panel { display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start; }
     .config-image-wrapper {
       flex: 1; min-width: 400px;
       position: relative;
@@ -602,9 +602,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const wrapper = document.getElementById("config-image-wrapper");
   wrapper.addEventListener("click", (e) => {
     if (!activeConfigTemplate) return;
-    const rect = wrapper.getBoundingClientRect();
-    const xPercent = ((e.clientX - rect.left) / rect.width) * 100;
-    const yPercent = ((e.clientY - rect.top) / rect.height) * 100;
+    // Use the img element's bounding rect, not the wrapper's.
+    // The wrapper has a 2px border on each side, so using the wrapper rect
+    // introduces a small but consistent offset in the stored percentages.
+    const imgEl = document.getElementById("config-image");
+    const imgRect = imgEl.getBoundingClientRect();
+    const xPercent = ((e.clientX - imgRect.left) / imgRect.width) * 100;
+    const yPercent = ((e.clientY - imgRect.top) / imgRect.height) * 100;
 
     if (!configData[activeConfigTemplate]) configData[activeConfigTemplate] = {};
     const fontSize = parseInt(document.getElementById("fontSize-" + activeField).value) || 32;
@@ -652,9 +656,10 @@ async function saveConfig() {
     return;
   }
 
-  // Capture the current display width of the image so the backend can scale font sizes
-  const wrapper = document.getElementById("config-image-wrapper");
-  const displayWidth = wrapper.getBoundingClientRect().width;
+  // Capture the current display width of the IMAGE (not the wrapper which includes borders)
+  // so the backend can scale font sizes correctly.
+  const imgEl = document.getElementById("config-image");
+  const displayWidth = imgEl.getBoundingClientRect().width;
 
   setStatus("config-status", "loading", '<span class="spinner"></span> Saving...');
   try {

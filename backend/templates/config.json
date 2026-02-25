@@ -1,0 +1,67 @@
+{
+  "template1": {
+    "name": {
+      "xPercent": 60.03424762046501,
+      "yPercent": 38.32862997491124,
+      "fontSize": 28,
+      "color": "#000000"
+    },
+    "eventName": {
+      "xPercent": 27.32876816841021,
+      "yPercent": 46.08603460344636,
+      "fontSize": 28,
+      "color": "#000000"
+    },
+    "eventDate": {
+      "xPercent": 64.1438366615609,
+      "yPercent": 49.78843226706539,
+      "fontSize": 28,
+      "color": "#000000"
+    }
+  },
+  "template2": {
+    "name": {
+      "xPercent": 61.917809264300615,
+      "yPercent": 38.04654414799088,
+      "fontSize": 28,
+      "color": "#000000"
+    },
+    "eventName": {
+      "xPercent": 34.17808323690336,
+      "yPercent": 45.803948776526,
+      "fontSize": 28,
+      "color": "#000000"
+    },
+    "eventDate": {
+      "xPercent": 61.917809264300615,
+      "yPercent": 49.33004178949651,
+      "fontSize": 28,
+      "color": "#000000"
+    }
+  },
+  "template3": {
+    "eventDate": {
+      "xPercent": 30.41095994923213,
+      "yPercent": 47.2143859817142,
+      "fontSize": 28,
+      "color": "#000000"
+    },
+    "eventName": {
+      "xPercent": 59.86301474375267,
+      "yPercent": 40.691113907718766,
+      "fontSize": 28,
+      "color": "#000000"
+    },
+    "name": {
+      "xPercent": 61.57534351087597,
+      "yPercent": 36.98871624409973,
+      "fontSize": 28,
+      "color": "#000000"
+    }
+  },
+  "_displayWidths": {
+    "template1": 584,
+    "template2": 584,
+    "template3": 584
+  }
+}

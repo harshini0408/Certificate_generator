@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Yukta - Certificate Generator</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f2f5;
+      color: #333;
+      min-height: 100vh;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      color: white;
+      padding: 24px 0;
+      text-align: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+    .header h1 { font-size: 28px; font-weight: 700; }
+    .header p { font-size: 14px; opacity: 0.8; margin-top: 4px; }
+
+    .container { max-width: 960px; margin: 0 auto; padding: 20px; }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 20px;
+      background: white;
+      border-radius: 10px;
+      padding: 4px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      background: transparent;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      color: #666;
+      transition: all 0.2s;
+    }
+    .tab-btn.active { background: #0f3460; color: white; }
+    .tab-btn:hover:not(.active) { background: #f0f4ff; }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 28px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+    }
+    .card h2 {
+      font-size: 18px;
+      color: #1a1a2e;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card h2 .step {
+      background: #0f3460;
+      color: white;
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+    .card p.desc { font-size: 13px; color: #888; margin-bottom: 16px; }
+
+    .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .upload-item {
+      border: 2px dashed #d0d5dd;
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .upload-item:hover { border-color: #0f3460; background: #f8f9ff; }
+    .upload-item.uploaded { border-color: #27ae60; background: #f0fff5; }
+    .upload-item label { display: block; cursor: pointer; font-size: 13px; color: #555; font-weight: 600; }
+    .upload-item label span { font-size: 11px; color: #999; font-weight: 400; display: block; margin-top: 4px; }
+    .upload-item input[type="file"] { display: none; }
+    .upload-item .file-name { font-size: 11px; color: #27ae60; margin-top: 6px; font-weight: 600; }
+    .upload-item.full-width { grid-column: 1 / -1; }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 10px 22px; border: none; border-radius: 8px;
+      font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-primary { background: #0f3460; color: white; }
+    .btn-primary:hover { background: #1a4a7a; }
+    .btn-primary:disabled { background: #ccc; cursor: not-allowed; }
+    .btn-success { background: #27ae60; color: white; }
+    .btn-success:hover { background: #219150; }
+    .btn-secondary { background: #e0e0e0; color: #333; }
+    .btn-secondary:hover { background: #d0d0d0; }
+    .btn-danger { background: #e74c3c; color: white; }
+    .btn-danger:hover { background: #c0392b; }
+    .btn-sm { padding: 6px 14px; font-size: 12px; }
+    .btn-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+
+    .status-bar {
+      padding: 12px 16px; border-radius: 8px; margin-top: 14px; font-size: 13px; display: none;
+    }
+    .status-bar.info { background: #e8f4fd; color: #1565c0; display: block; }
+    .status-bar.success { background: #e8f5e9; color: #2e7d32; display: block; }
+    .status-bar.error { background: #fde8e8; color: #c62828; display: block; }
+    .status-bar.loading { background: #fff8e1; color: #f57f17; display: block; }
+    .status-bar.warn { background: #fff3e0; color: #e65100; display: block; }
+
+    .spinner {
+      display: inline-block; width: 14px; height: 14px;
+      border: 2px solid #f57f17; border-top-color: transparent;
+      border-radius: 50%; animation: spin 0.8s linear infinite; margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ===== Configure Tab: Coordinate Picker ===== */
+    .config-template-tabs {
+      display: flex; gap: 8px; margin-bottom: 16px;
+    }
+    .config-template-tabs .btn.active { background: #0f3460; color: white; }
+
+    .config-panel { display: flex; gap: 20px; flex-wrap: wrap; }
+    .config-image-wrapper {
+      flex: 1; min-width: 400px;
+      position: relative;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: crosshair;
+      background: #fafafa;
+    }
+    .config-image-wrapper img {
+      display: block; width: 100%; height: auto;
+    }
+
+    /* Markers on the image */
+    .marker {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      color: white;
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: 10;
+    }
+    .marker.name-marker { background: #e74c3c; }
+    .marker.eventName-marker { background: #2980b9; }
+    .marker.eventDate-marker { background: #27ae60; }
+
+    .config-sidebar {
+      width: 260px; flex-shrink: 0;
+    }
+    .field-config {
+      background: #f8f9fb; border-radius: 8px; padding: 14px; margin-bottom: 12px;
+    }
+    .field-config h4 { font-size: 13px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+    .field-config .dot {
+      width: 10px; height: 10px; border-radius: 50%; display: inline-block;
+    }
+    .field-config label { font-size: 11px; color: #888; display: block; margin-top: 6px; }
+    .field-config input[type="number"],
+    .field-config input[type="color"] {
+      width: 100%; padding: 5px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px; margin-top: 2px;
+    }
+    .field-config input[type="color"] { height: 30px; padding: 2px; cursor: pointer; }
+    .field-config .coords-display {
+      font-size: 11px; color: #555; margin-top: 4px; font-family: monospace;
+    }
+
+    .field-selector {
+      display: flex; gap: 6px; margin-bottom: 14px;
+    }
+    .field-selector .btn.active-field { outline: 3px solid #f39c12; outline-offset: 1px; }
+
+    /* Preview table */
+    .preview-table-container {
+      max-height: 300px; overflow-y: auto; border-radius: 8px; border: 1px solid #e8e8e8;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    table th {
+      background: #f5f6f8; padding: 10px 12px; text-align: left;
+      font-weight: 600; color: #555; position: sticky; top: 0;
+    }
+    table td { padding: 8px 12px; border-top: 1px solid #f0f0f0; }
+    table tr:hover td { background: #fafbff; }
+
+    .mode-selector { display: flex; gap: 12px; margin-bottom: 16px; }
+    .mode-option {
+      flex: 1; border: 2px solid #e0e0e0; border-radius: 8px;
+      padding: 14px; text-align: center; cursor: pointer; transition: all 0.2s;
+    }
+    .mode-option:hover { border-color: #0f3460; }
+    .mode-option.active { border-color: #0f3460; background: #f0f4ff; }
+    .mode-option h3 { font-size: 14px; margin-bottom: 4px; }
+    .mode-option p { font-size: 11px; color: #888; }
+
+    .result-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 0; font-size: 13px; border-bottom: 1px solid #f5f5f5;
+    }
+    .badge {
+      padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600;
+    }
+    .badge.sent { background: #e8f5e9; color: #2e7d32; }
+    .badge.generated { background: #e3f2fd; color: #1565c0; }
+    .badge.failed { background: #fde8e8; color: #c62828; }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 700px) {
+      .upload-grid { grid-template-columns: 1fr; }
+      .config-panel { flex-direction: column; }
+      .config-sidebar { width: 100%; }
+      .config-image-wrapper { min-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🎓 Yukta Certificate Generator</h1>
+    <p>Generate and distribute certificates to participants</p>
+  </div>
+
+  <div class="container">
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('upload')">1. Upload</button>
+      <button class="tab-btn" onclick="switchTab('configure')">2. Configure Positions</button>
+      <button class="tab-btn" onclick="switchTab('generate')">3. Preview & Send</button>
+    </div>
+
+    <!-- ============ TAB 1: Upload ============ -->
+    <div class="tab-content active" id="tab-upload">
+      <div class="card">
+        <h2><span class="step">1</span> Upload Files</h2>
+        <p class="desc">Upload your 3 certificate template images (PNG/JPG) and the Excel sheet with participant data.</p>
+
+        <div class="upload-grid">
+          <div class="upload-item" id="drop-t1">
+            <label for="template1">
+              📄 Template 1 — Technical
+              <span>name, event name, date</span>
+            </label>
+            <input type="file" id="template1" accept=".png,.jpg,.jpeg" onchange="onFileSelect(this, 'drop-t1')" />
+            <div class="file-name" id="fname-t1"></div>
+          </div>
+
+          <div class="upload-item" id="drop-t2">
+            <label for="template2">
+              📄 Template 2 — Non-Technical
+              <span>name, event name, date</span>
+            </label>
+            <input type="file" id="template2" accept=".png,.jpg,.jpeg" onchange="onFileSelect(this, 'drop-t2')" />
+            <div class="file-name" id="fname-t2"></div>
+          </div>
+
+          <div class="upload-item" id="drop-t3">
+            <label for="template3">
+              📄 Template 3 — Workshop
+              <span>name, event name, date</span>
+            </label>
+            <input type="file" id="template3" accept=".png,.jpg,.jpeg" onchange="onFileSelect(this, 'drop-t3')" />
+            <div class="file-name" id="fname-t3"></div>
+          </div>
+
+          <div class="upload-item full-width" id="drop-excel">
+            <label for="excel">
+              📊 Excel Sheet (.xlsx)
+              <span>Columns: Name, Email, Event Name, Event Date, Template (1/2/3)</span>
+            </label>
+            <input type="file" id="excel" accept=".xlsx,.xls" onchange="onFileSelect(this, 'drop-excel')" />
+            <div class="file-name" id="fname-excel"></div>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="uploadFiles()">⬆️ Upload All Files</button>
+        </div>
+        <div class="status-bar" id="upload-status"></div>
+      </div>
+    </div>
+
+    <!-- ============ TAB 2: Configure Positions ============ -->
+    <div class="tab-content" id="tab-configure">
+      <div class="card">
+        <h2><span class="step">2</span> Configure Text Positions</h2>
+        <p class="desc">
+          Select a field below, then <strong>click on the certificate image</strong> where that field should appear.
+          Adjust font size and color as needed.
+        </p>
+
+        <!-- Template selector -->
+        <div class="config-template-tabs" id="config-template-tabs"></div>
+
+        <div id="config-no-templates" class="status-bar warn">
+          No templates uploaded yet. Go to the Upload tab first.
+        </div>
+
+        <div id="config-main" class="hidden">
+          <!-- Field selector -->
+          <p style="font-size: 12px; color: #888; margin-bottom: 6px;">Click a field, then click on the image to place it:</p>
+          <div class="field-selector">
+            <button class="btn btn-sm btn-danger active-field" id="sel-name" onclick="selectField('name')">📍 Name</button>
+            <button class="btn btn-sm btn-primary" id="sel-eventName" onclick="selectField('eventName')">📍 Event Name</button>
+            <button class="btn btn-sm btn-success" id="sel-eventDate" onclick="selectField('eventDate')">📍 Event Date</button>
+          </div>
+
+          <div class="config-panel">
+            <!-- Image area -->
+            <div class="config-image-wrapper" id="config-image-wrapper">
+              <img id="config-image" src="" alt="Template" />
+              <!-- Markers will be added dynamically -->
+            </div>
+
+            <!-- Sidebar with settings -->
+            <div class="config-sidebar">
+              <div class="field-config">
+                <h4><span class="dot" style="background:#e74c3c;"></span> Name</h4>
+                <div class="coords-display" id="coords-name">Not placed yet</div>
+                <label>Font Size
+                  <input type="number" id="fontSize-name" value="36" min="8" max="120" onchange="updateFieldSetting('name')">
+                </label>
+                <label>Color
+                  <input type="color" id="color-name" value="#000000" onchange="updateFieldSetting('name')">
+                </label>
+              </div>
+
+              <div class="field-config">
+                <h4><span class="dot" style="background:#2980b9;"></span> Event Name</h4>
+                <div class="coords-display" id="coords-eventName">Not placed yet</div>
+                <label>Font Size
+                  <input type="number" id="fontSize-eventName" value="28" min="8" max="120" onchange="updateFieldSetting('eventName')">
+                </label>
+                <label>Color
+                  <input type="color" id="color-eventName" value="#000000" onchange="updateFieldSetting('eventName')">
+                </label>
+              </div>
+
+              <div class="field-config">
+                <h4><span class="dot" style="background:#27ae60;"></span> Event Date</h4>
+                <div class="coords-display" id="coords-eventDate">Not placed yet</div>
+                <label>Font Size
+                  <input type="number" id="fontSize-eventDate" value="22" min="8" max="120" onchange="updateFieldSetting('eventDate')">
+                </label>
+                <label>Color
+                  <input type="color" id="color-eventDate" value="#000000" onchange="updateFieldSetting('eventDate')">
+                </label>
+              </div>
+
+              <div class="btn-row">
+                <button class="btn btn-success btn-sm" onclick="saveConfig()">💾 Save Positions</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="status-bar" id="config-status"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ TAB 3: Preview & Send ============ -->
+    <div class="tab-content" id="tab-generate">
+      <div class="card">
+        <h2><span class="step">3</span> Preview Data</h2>
+        <p class="desc">Review participant data. Rows with missing Name or Email are automatically skipped.</p>
+
+        <button class="btn btn-secondary" onclick="previewData()">👁️ Load Preview</button>
+
+        <div id="preview-area" class="hidden" style="margin-top: 14px;">
+          <p style="font-size: 13px; color: #666; margin-bottom: 8px;">
+            ✅ <strong id="preview-count">0</strong> valid participants
+            &nbsp;|&nbsp; ⚠️ <strong id="skipped-count">0</strong> skipped
+          </p>
+          <div class="preview-table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Event</th>
+                  <th>Date</th>
+                  <th>Template</th>
+                </tr>
+              </thead>
+              <tbody id="preview-body"></tbody>
+            </table>
+          </div>
+          <div id="skipped-area" class="hidden" style="margin-top: 10px;">
+            <p style="font-size: 12px; color: #e65100; font-weight: 600;">⚠️ Skipped rows:</p>
+            <ul id="skipped-list" style="font-size: 12px; color: #888; margin-left: 16px;"></ul>
+          </div>
+        </div>
+        <div class="status-bar" id="preview-status"></div>
+      </div>
+
+      <div class="card">
+        <h2>Send Certificates</h2>
+        <p class="desc">Choose how to distribute, then generate.</p>
+
+        <div class="mode-selector">
+          <div class="mode-option active" id="mode-email" onclick="selectMode('email')">
+            <h3>📧 Send via Email</h3>
+            <p>Email certificates directly</p>
+          </div>
+          <div class="mode-option" id="mode-generate" onclick="selectMode('generate')">
+            <h3>💾 Generate Only</h3>
+            <p>Download PDFs locally</p>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-success" id="generate-btn" onclick="generateAndSend()">
+            🚀 Generate Certificates
+          </button>
+          <button class="btn btn-secondary hidden" id="download-all-btn" onclick="downloadAll()">
+            📥 Download All
+          </button>
+        </div>
+
+        <div class="status-bar" id="generate-status"></div>
+
+        <div id="results-area" class="hidden" style="margin-top: 12px; max-height: 300px; overflow-y: auto;">
+          <div id="results-list"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+<script>
+const API = "http://localhost:3000/api";
+let currentMode = "email";
+
+// ============ Tab switching ============
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach((b, i) => {
+    b.classList.toggle('active', b.textContent.includes(tab === 'upload' ? '1.' : tab === 'configure' ? '2.' : '3.'));
+  });
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+
+  if (tab === 'configure') loadTemplatesForConfig();
+}
+
+// ============ File selection UI ============
+function onFileSelect(input, dropId) {
+  const dropEl = document.getElementById(dropId);
+  const fnameMap = {
+    "drop-t1": "fname-t1", "drop-t2": "fname-t2", "drop-t3": "fname-t3", "drop-excel": "fname-excel"
+  };
+  const fnameEl = document.getElementById(fnameMap[dropId]);
+  if (input.files.length > 0) {
+    dropEl.classList.add("uploaded");
+    fnameEl.textContent = "✓ " + input.files[0].name;
+  } else {
+    dropEl.classList.remove("uploaded");
+    fnameEl.textContent = "";
+  }
+}
+
+function setStatus(id, type, msg) {
+  const el = document.getElementById(id);
+  el.className = "status-bar " + type;
+  el.innerHTML = msg;
+}
+
+// ============ Upload ============
+async function uploadFiles() {
+  const formData = new FormData();
+  const t1 = document.getElementById("template1").files[0];
+  const t2 = document.getElementById("template2").files[0];
+  const t3 = document.getElementById("template3").files[0];
+  const excel = document.getElementById("excel").files[0];
+
+  if (!excel) { setStatus("upload-status", "error", "❌ Please select an Excel file."); return; }
+  if (t1) formData.append("template1", t1);
+  if (t2) formData.append("template2", t2);
+  if (t3) formData.append("template3", t3);
+  formData.append("excel", excel);
+
+  setStatus("upload-status", "loading", '<span class="spinner"></span> Uploading...');
+  try {
+    const res = await fetch(API + "/upload", { method: "POST", body: formData });
+    const data = await res.json();
+    if (data.success) {
+      setStatus("upload-status", "success", "✅ " + data.message + " (" + data.files.join(", ") + ")");
+    } else {
+      setStatus("upload-status", "error", "❌ " + data.message);
+    }
+  } catch (err) {
+    setStatus("upload-status", "error", "❌ " + err.message);
+  }
+}
+
+// ============ Configure Positions ============
+let configTemplates = {};  // { template1: "/templates/template1.png", ... }
+let configData = {};       // { template1: { name: {xPercent, yPercent, fontSize, color}, ... }, ... }
+let activeConfigTemplate = null;
+let activeField = "name";
+
+const TEMPLATE_LABELS = { template1: "Technical", template2: "Non-Technical", template3: "Workshop" };
+const FIELD_COLORS = { name: "#e74c3c", eventName: "#2980b9", eventDate: "#27ae60" };
+
+async function loadTemplatesForConfig() {
+  try {
+    const res = await fetch(API + "/templates");
+    const result = await res.json();
+    configTemplates = result.templates || {};
+    const savedConfig = result.config || {};
+
+    // Merge saved config
+    Object.keys(savedConfig).forEach(k => {
+      configData[k] = savedConfig[k];
+    });
+
+    const tabsEl = document.getElementById("config-template-tabs");
+    tabsEl.innerHTML = "";
+
+    const keys = Object.keys(configTemplates);
+    if (keys.length === 0) {
+      document.getElementById("config-no-templates").style.display = "block";
+      document.getElementById("config-main").classList.add("hidden");
+      return;
+    }
+
+    document.getElementById("config-no-templates").style.display = "none";
+    document.getElementById("config-main").classList.remove("hidden");
+
+    keys.forEach((key, i) => {
+      const btn = document.createElement("button");
+      btn.className = "btn btn-sm btn-secondary";
+      btn.textContent = TEMPLATE_LABELS[key] || key;
+      btn.onclick = () => switchConfigTemplate(key);
+      tabsEl.appendChild(btn);
+    });
+
+    // Auto-select first template
+    switchConfigTemplate(keys[0]);
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function switchConfigTemplate(key) {
+  activeConfigTemplate = key;
+  // Highlight tab
+  const tabs = document.querySelectorAll("#config-template-tabs .btn");
+  tabs.forEach(b => b.classList.toggle("active", b.textContent === (TEMPLATE_LABELS[key] || key)));
+
+  // Load image
+  const img = document.getElementById("config-image");
+  img.src = configTemplates[key] + "?t=" + Date.now(); // cache bust
+
+  // Initialize config if not exists
+  if (!configData[key]) configData[key] = {};
+
+  // Load saved values into sidebar
+  ["name", "eventName", "eventDate"].forEach(field => {
+    const fc = configData[key][field];
+    if (fc) {
+      document.getElementById("coords-" + field).textContent = `x: ${fc.xPercent.toFixed(1)}%, y: ${fc.yPercent.toFixed(1)}%`;
+      document.getElementById("fontSize-" + field).value = fc.fontSize || 32;
+      document.getElementById("color-" + field).value = fc.color || "#000000";
+    } else {
+      document.getElementById("coords-" + field).textContent = "Not placed yet";
+    }
+  });
+
+  renderMarkers();
+}
+
+function selectField(field) {
+  activeField = field;
+  document.querySelectorAll(".field-selector .btn").forEach(b => b.classList.remove("active-field"));
+  document.getElementById("sel-" + field).classList.add("active-field");
+}
+
+// Click on image to place marker
+document.addEventListener("DOMContentLoaded", () => {
+  const wrapper = document.getElementById("config-image-wrapper");
+  wrapper.addEventListener("click", (e) => {
+    if (!activeConfigTemplate) return;
+    const rect = wrapper.getBoundingClientRect();
+    const xPercent = ((e.clientX - rect.left) / rect.width) * 100;
+    const yPercent = ((e.clientY - rect.top) / rect.height) * 100;
+
+    if (!configData[activeConfigTemplate]) configData[activeConfigTemplate] = {};
+    const fontSize = parseInt(document.getElementById("fontSize-" + activeField).value) || 32;
+    const color = document.getElementById("color-" + activeField).value || "#000000";
+
+    configData[activeConfigTemplate][activeField] = { xPercent, yPercent, fontSize, color };
+
+    document.getElementById("coords-" + activeField).textContent = `x: ${xPercent.toFixed(1)}%, y: ${yPercent.toFixed(1)}%`;
+
+    renderMarkers();
+  });
+});
+
+function updateFieldSetting(field) {
+  if (!activeConfigTemplate || !configData[activeConfigTemplate] || !configData[activeConfigTemplate][field]) return;
+  configData[activeConfigTemplate][field].fontSize = parseInt(document.getElementById("fontSize-" + field).value) || 32;
+  configData[activeConfigTemplate][field].color = document.getElementById("color-" + field).value || "#000000";
+}
+
+function renderMarkers() {
+  // Remove old markers
+  document.querySelectorAll(".marker").forEach(m => m.remove());
+
+  if (!activeConfigTemplate || !configData[activeConfigTemplate]) return;
+  const wrapper = document.getElementById("config-image-wrapper");
+
+  ["name", "eventName", "eventDate"].forEach(field => {
+    const fc = configData[activeConfigTemplate][field];
+    if (!fc) return;
+
+    const marker = document.createElement("div");
+    marker.className = `marker ${field}-marker`;
+    marker.textContent = field === "name" ? "NAME" : field === "eventName" ? "EVENT" : "DATE";
+    marker.style.left = fc.xPercent + "%";
+    marker.style.top = fc.yPercent + "%";
+    wrapper.appendChild(marker);
+  });
+}
+
+async function saveConfig() {
+  if (!activeConfigTemplate) return;
+  const coords = configData[activeConfigTemplate];
+  if (!coords || !coords.name || !coords.eventName || !coords.eventDate) {
+    setStatus("config-status", "error", "❌ Please place all 3 fields (Name, Event Name, Date) on the image.");
+    return;
+  }
+
+  // Capture the current display width of the image so the backend can scale font sizes
+  const wrapper = document.getElementById("config-image-wrapper");
+  const displayWidth = wrapper.getBoundingClientRect().width;
+
+  setStatus("config-status", "loading", '<span class="spinner"></span> Saving...');
+  try {
+    const res = await fetch(API + "/config", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ templateKey: activeConfigTemplate, coordinates: coords, displayWidth }),
+    });
+    const result = await res.json();
+    if (result.success) {
+      setStatus("config-status", "success", "✅ Positions saved for " + (TEMPLATE_LABELS[activeConfigTemplate] || activeConfigTemplate));
+    } else {
+      setStatus("config-status", "error", "❌ " + result.message);
+    }
+  } catch (err) {
+    setStatus("config-status", "error", "❌ " + err.message);
+  }
+}
+
+// ============ Preview ============
+async function previewData() {
+  setStatus("preview-status", "loading", '<span class="spinner"></span> Loading...');
+  document.getElementById("preview-area").classList.add("hidden");
+
+  try {
+    const res = await fetch(API + "/preview");
+    const result = await res.json();
+    if (!result.success) { setStatus("preview-status", "error", "❌ " + result.message); return; }
+
+    document.getElementById("preview-count").textContent = result.data.length;
+    document.getElementById("skipped-count").textContent = (result.skipped || []).length;
+
+    const tbody = document.getElementById("preview-body");
+    tbody.innerHTML = "";
+    result.data.forEach((row, i) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${i + 1}</td>
+        <td>${esc(row.name)}</td>
+        <td>${esc(row.email)}</td>
+        <td>${esc(row.eventName)}</td>
+        <td>${esc(row.eventDate)}</td>
+        <td>${row.template} (${esc(row.templateLabel)})</td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+    // Show skipped
+    const skipped = result.skipped || [];
+    if (skipped.length > 0) {
+      document.getElementById("skipped-area").classList.remove("hidden");
+      const ul = document.getElementById("skipped-list");
+      ul.innerHTML = "";
+      skipped.forEach(s => {
+        const li = document.createElement("li");
+        li.textContent = `Row ${s.rowNumber}: ${s.reason}` + (s.name ? ` (${s.name})` : "");
+        ul.appendChild(li);
+      });
+    } else {
+      document.getElementById("skipped-area").classList.add("hidden");
+    }
+
+    document.getElementById("preview-area").classList.remove("hidden");
+    setStatus("preview-status", "success", `✅ ${result.data.length} valid, ${skipped.length} skipped`);
+  } catch (err) {
+    setStatus("preview-status", "error", "❌ " + err.message);
+  }
+}
+
+// ============ Mode & Generate ============
+function selectMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll(".mode-option").forEach(el => el.classList.remove("active"));
+  document.getElementById("mode-" + mode).classList.add("active");
+}
+
+async function generateAndSend() {
+  const btn = document.getElementById("generate-btn");
+  btn.disabled = true;
+  btn.textContent = "⏳ Processing...";
+  const label = currentMode === "email" ? "Generating & emailing" : "Generating";
+  setStatus("generate-status", "loading", `<span class="spinner"></span> ${label} certificates...`);
+  document.getElementById("results-area").classList.add("hidden");
+  document.getElementById("download-all-btn").classList.add("hidden");
+
+  try {
+    const res = await fetch(API + "/generate-and-send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mode: currentMode }),
+    });
+    const result = await res.json();
+
+    if (!result.success) {
+      setStatus("generate-status", "error", "❌ " + result.message);
+      btn.disabled = false; btn.textContent = "🚀 Generate Certificates";
+      return;
+    }
+
+    setStatus("generate-status", "success", "✅ " + result.message);
+
+    const listEl = document.getElementById("results-list");
+    listEl.innerHTML = "";
+    result.results.forEach(r => {
+      const div = document.createElement("div");
+      div.className = "result-item";
+      const badgeText = r.status === "sent" ? "Sent" : r.status === "generated" ? "Generated" : "Failed";
+      let extra = "";
+      if (r.status === "failed") extra = ` — ${esc(r.error)}`;
+      if (r.status === "generated" && r.file) {
+        extra = ` <a href="${API.replace('/api','')}/api/download/${r.file}" target="_blank" style="color:#1565c0;">[Download]</a>`;
+      }
+      div.innerHTML = `<span class="badge ${r.status}">${badgeText}</span> <strong>${esc(r.name)}</strong> (${esc(r.email)})${extra}`;
+      listEl.appendChild(div);
+    });
+    document.getElementById("results-area").classList.remove("hidden");
+    if (currentMode === "generate") document.getElementById("download-all-btn").classList.remove("hidden");
+  } catch (err) {
+    setStatus("generate-status", "error", "❌ " + err.message);
+  }
+  btn.disabled = false;
+  btn.textContent = "🚀 Generate Certificates";
+}
+
+async function downloadAll() {
+  try {
+    const res = await fetch(API + "/download-all");
+    const result = await res.json();
+    if (result.success) {
+      result.files.forEach(f => {
+        const a = document.createElement("a");
+        a.href = API.replace("/api", "") + f.url;
+        a.download = f.name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      });
+    }
+  } catch (err) { alert("Failed: " + err.message); }
+}
+
+function esc(str) {
+  const d = document.createElement("div");
+  d.textContent = str || "";
+  return d.innerHTML;
+}
+</script>
+</body>
+</html>

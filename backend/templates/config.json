@@ -1,20 +1,20 @@
 {
   "template1": {
     "name": {
-      "xPercent": 57.85124088531665,
-      "yPercent": 53.67427553034627,
+      "xPercent": 60.43388556769684,
+      "yPercent": 51.77473512414383,
       "fontSize": 15,
       "color": "#000000"
     },
     "eventName": {
-      "xPercent": 32.54132299799061,
-      "yPercent": 65.12024204480593,
+      "xPercent": 36.1570255533229,
+      "yPercent": 63.65905483019406,
       "fontSize": 15,
       "color": "#000000"
     },
     "eventDate": {
-      "xPercent": 62.50000131360102,
-      "yPercent": 69.26027248620625,
+      "xPercent": 15.323691782122562,
+      "yPercent": 73.93607454575722,
       "fontSize": 15,
       "color": "#000000"
     }
@@ -22,44 +22,59 @@
   "_displayWidths": {
     "template1": 580.7999877929688,
     "template3": 580.7999877929688,
-    "template2": 580.7999877929688
+    "template2": 580.7999877929688,
+    "template4": 580.7999877929688
   },
   "template3": {
     "name": {
-      "xPercent": 59.74518031906213,
-      "yPercent": 51.531203921708524,
-      "fontSize": 20,
+      "xPercent": 60.08953294337949,
+      "yPercent": 50.800606598411335,
+      "fontSize": 10,
       "color": "#000000"
     },
     "eventName": {
-      "xPercent": 58.88429875826873,
-      "yPercent": 56.401827970414764,
-      "fontSize": 15,
+      "xPercent": 60.95041450417289,
+      "yPercent": 55.671230647117575,
+      "fontSize": 10,
       "color": "#000000"
     },
     "eventDate": {
-      "xPercent": 32.02479406151457,
-      "yPercent": 66.38660727026256,
-      "fontSize": 15,
+      "xPercent": 29.958678315610403,
+      "yPercent": 65.65600994696538,
+      "fontSize": 10,
       "color": "#000000"
     }
   },
   "template2": {
     "name": {
-      "xPercent": 63.70523549871178,
-      "yPercent": 52.50532873144977,
-      "fontSize": 20,
+      "xPercent": 62.50000131360102,
+      "yPercent": 51.57990756100171,
+      "fontSize": 15,
       "color": "#000000"
     },
     "eventName": {
-      "xPercent": 33.91873349526006,
-      "yPercent": 63.22070163860351,
+      "xPercent": 32.02479406151457,
+      "yPercent": 62.78234287302607,
       "fontSize": 15,
       "color": "#000000"
     },
     "eventDate": {
-      "xPercent": 61.639119752807616,
-      "yPercent": 68.09132568730975,
+      "xPercent": 64.73829337166386,
+      "yPercent": 67.89649812416762,
+      "fontSize": 15,
+      "color": "#000000"
+    }
+  },
+  "template4": {
+    "name": {
+      "xPercent": 59.74518031906213,
+      "yPercent": 51.77473512414383,
+      "fontSize": 15,
+      "color": "#000000"
+    },
+    "eventDate": {
+      "xPercent": 77.47934047140622,
+      "yPercent": 62.73363923373287,
       "fontSize": 15,
       "color": "#000000"
     }

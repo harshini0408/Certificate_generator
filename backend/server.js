@@ -67,11 +67,11 @@ function saveConfig(config) {
 // Upload templates and excel
 app.post(
   "/api/upload",
-  upload.fields([
-    { name: "excel", maxCount: 1 },
+  upload.fields([    { name: "excel", maxCount: 1 },
     { name: "template1", maxCount: 1 },
     { name: "template2", maxCount: 1 },
     { name: "template3", maxCount: 1 },
+    { name: "template4", maxCount: 1 },
   ]),
   (req, res) => {
     try {
@@ -93,7 +93,7 @@ app.get("/api/templates", (req, res) => {
   const templates = {};
   const exts = [".png", ".jpg", ".jpeg"];
 
-  for (let i = 1; i <= 3; i++) {
+  for (let i = 1; i <= 4; i++) {
     for (const ext of exts) {
       const fname = `template${i}${ext}`;
       if (fs.existsSync(path.join(templatesDir, fname))) {
@@ -206,12 +206,19 @@ app.post("/api/generate-and-send", async (req, res) => {
         const outputFilename = `certificate_${safeName}_${i + 1}.pdf`;
         const outputPath = path.join(outputDir, outputFilename);
 
-        await generateCertificate(templateImagePath, row, coords, outputPath, displayWidth);
-
-        const mode = req.body.mode || "email";
-        if (mode === "email") {
+        await generateCertificate(templateImagePath, row, coords, outputPath, displayWidth);        const mode = req.body.mode || "email";
+        if (mode === "email" && row.email) {
           await sendEmail(row.email, row.name, outputPath);
           results.push({ name: row.name, email: row.email, status: "sent" });
+        } else if (mode === "email" && !row.email) {
+          // Email mode but no email — still generated the PDF, mark accordingly
+          results.push({
+            name: row.name,
+            email: "",
+            status: "generated",
+            file: outputFilename,
+            note: "No email — PDF generated only",
+          });
         } else {
           results.push({
             name: row.name,

@@ -253,8 +253,7 @@
     <!-- ============ TAB 1: Upload ============ -->
     <div class="tab-content active" id="tab-upload">
       <div class="card">
-        <h2><span class="step">1</span> Upload Files</h2>
-        <p class="desc">Upload your 3 certificate template images (PNG/JPG) and the Excel sheet with participant data.</p>
+        <h2><span class="step">1</span> Upload Files</h2>        <p class="desc">Upload your 4 certificate template images (PNG/JPG) and the Excel sheet with participant data.</p>
 
         <div class="upload-grid">
           <div class="upload-item" id="drop-t1">
@@ -284,10 +283,19 @@
             <div class="file-name" id="fname-t3"></div>
           </div>
 
+          <div class="upload-item" id="drop-t4">
+            <label for="template4">
+              📄 Template 4 — General
+              <span>name, date only</span>
+            </label>
+            <input type="file" id="template4" accept=".png,.jpg,.jpeg" onchange="onFileSelect(this, 'drop-t4')" />
+            <div class="file-name" id="fname-t4"></div>
+          </div>
+
           <div class="upload-item full-width" id="drop-excel">
             <label for="excel">
               📊 Excel Sheet (.xlsx)
-              <span>Columns: Name, Email, Event Name, Event Date, Template (1/2/3)</span>
+              <span>Columns: Name, Event Name, Event Date, Template (1/2/3/4), Email (optional)</span>
             </label>
             <input type="file" id="excel" accept=".xlsx,.xls" onchange="onFileSelect(this, 'drop-excel')" />
             <div class="file-name" id="fname-excel"></div>
@@ -344,9 +352,7 @@
                 <label>Color
                   <input type="color" id="color-name" value="#000000" onchange="updateFieldSetting('name')">
                 </label>
-              </div>
-
-              <div class="field-config">
+              </div>              <div class="field-config" id="config-eventName">
                 <h4><span class="dot" style="background:#2980b9;"></span> Event Name</h4>
                 <div class="coords-display" id="coords-eventName">Not placed yet</div>
                 <label>Font Size
@@ -466,9 +472,8 @@ function switchTab(tab) {
 
 // ============ File selection UI ============
 function onFileSelect(input, dropId) {
-  const dropEl = document.getElementById(dropId);
-  const fnameMap = {
-    "drop-t1": "fname-t1", "drop-t2": "fname-t2", "drop-t3": "fname-t3", "drop-excel": "fname-excel"
+  const dropEl = document.getElementById(dropId);  const fnameMap = {
+    "drop-t1": "fname-t1", "drop-t2": "fname-t2", "drop-t3": "fname-t3", "drop-t4": "fname-t4", "drop-excel": "fname-excel"
   };
   const fnameEl = document.getElementById(fnameMap[dropId]);
   if (input.files.length > 0) {
@@ -488,16 +493,17 @@ function setStatus(id, type, msg) {
 
 // ============ Upload ============
 async function uploadFiles() {
-  const formData = new FormData();
-  const t1 = document.getElementById("template1").files[0];
+  const formData = new FormData();  const t1 = document.getElementById("template1").files[0];
   const t2 = document.getElementById("template2").files[0];
   const t3 = document.getElementById("template3").files[0];
+  const t4 = document.getElementById("template4").files[0];
   const excel = document.getElementById("excel").files[0];
 
   if (!excel) { setStatus("upload-status", "error", "❌ Please select an Excel file."); return; }
   if (t1) formData.append("template1", t1);
   if (t2) formData.append("template2", t2);
   if (t3) formData.append("template3", t3);
+  if (t4) formData.append("template4", t4);
   formData.append("excel", excel);
 
   setStatus("upload-status", "loading", '<span class="spinner"></span> Uploading...');
@@ -520,8 +526,15 @@ let configData = {};       // { template1: { name: {xPercent, yPercent, fontSize
 let activeConfigTemplate = null;
 let activeField = "name";
 
-const TEMPLATE_LABELS = { template1: "Technical", template2: "Non-Technical", template3: "Workshop" };
+const TEMPLATE_LABELS = { template1: "Technical", template2: "Non-Technical", template3: "Workshop", template4: "General" };
 const FIELD_COLORS = { name: "#e74c3c", eventName: "#2980b9", eventDate: "#27ae60" };
+// Template4 only has name + date (no event name)
+const TEMPLATE_FIELDS = {
+  template1: ["name", "eventName", "eventDate"],
+  template2: ["name", "eventName", "eventDate"],
+  template3: ["name", "eventName", "eventDate"],
+  template4: ["name", "eventDate"],
+};
 
 async function loadTemplatesForConfig() {
   try {
@@ -575,6 +588,14 @@ function switchConfigTemplate(key) {
 
   // Initialize config if not exists
   if (!configData[key]) configData[key] = {};
+
+  // Show/hide fields based on which template is selected
+  const fields = TEMPLATE_FIELDS[key] || ["name", "eventName", "eventDate"];
+  const hasEventName = fields.includes("eventName");
+  document.getElementById("sel-eventName").style.display = hasEventName ? "" : "none";
+  document.getElementById("config-eventName").style.display = hasEventName ? "" : "none";
+  // If current active field is hidden, switch to name
+  if (!hasEventName && activeField === "eventName") selectField("name");
 
   // Load saved values into sidebar
   ["name", "eventName", "eventDate"].forEach(field => {
@@ -651,8 +672,10 @@ function renderMarkers() {
 async function saveConfig() {
   if (!activeConfigTemplate) return;
   const coords = configData[activeConfigTemplate];
-  if (!coords || !coords.name || !coords.eventName || !coords.eventDate) {
-    setStatus("config-status", "error", "❌ Please place all 3 fields (Name, Event Name, Date) on the image.");
+  const fields = TEMPLATE_FIELDS[activeConfigTemplate] || ["name", "eventName", "eventDate"];
+  const missing = fields.filter(f => !coords || !coords[f]);
+  if (missing.length > 0) {
+    setStatus("config-status", "error", "❌ Please place all fields: " + missing.join(", "));
     return;
   }
 
@@ -762,8 +785,7 @@ async function generateAndSend() {
     setStatus("generate-status", "success", "✅ " + result.message);
 
     const listEl = document.getElementById("results-list");
-    listEl.innerHTML = "";
-    result.results.forEach(r => {
+    listEl.innerHTML = "";    result.results.forEach(r => {
       const div = document.createElement("div");
       div.className = "result-item";
       const badgeText = r.status === "sent" ? "Sent" : r.status === "generated" ? "Generated" : "Failed";
@@ -771,8 +793,9 @@ async function generateAndSend() {
       if (r.status === "failed") extra = ` — ${esc(r.error)}`;
       if (r.status === "generated" && r.file) {
         extra = ` <a href="${API.replace('/api','')}/api/download/${r.file}" target="_blank" style="color:#1565c0;">[Download]</a>`;
+        if (r.note) extra += ` <span style="color:#e65100; font-size:11px;">(${esc(r.note)})</span>`;
       }
-      div.innerHTML = `<span class="badge ${r.status}">${badgeText}</span> <strong>${esc(r.name)}</strong> (${esc(r.email)})${extra}`;
+      div.innerHTML = `<span class="badge ${r.status}">${badgeText}</span> <strong>${esc(r.name)}</strong>${r.email ? ' (' + esc(r.email) + ')' : ''}${extra}`;
       listEl.appendChild(div);
     });
     document.getElementById("results-area").classList.remove("hidden");

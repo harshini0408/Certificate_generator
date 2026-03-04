@@ -8,9 +8,10 @@ const XLSX = require("xlsx");
  *   - Event (or Event Name)
  *   - Date (or Event Date)
  *   - Mail (or Email)
- *   - Template — can be: 1, 2, 3 OR "Template1", "Template2", "Template3"
+ *   - Template — can be: 1, 2, 3, 4 OR "Template1", "Template2", "Template3", "Template4"
  *
- * Rows with missing Name or Mail are silently skipped.
+ * Rows with missing Name are silently skipped.
+ * Email (Mail) is optional — needed only when sending via email.
  */
 function parseExcel(filePath) {
   const workbook = XLSX.readFile(filePath);
@@ -61,8 +62,7 @@ function parseExcel(filePath) {
     }
     participant.eventDate = String(participant.eventDate).trim();
 
-    // --- Silent skip logic ---
-    // Skip if name is missing
+    // --- Silent skip logic ---    // Skip if name is missing
     if (!participant.name) {
       skipped.push({
         rowNumber: participant.rowNumber,
@@ -71,26 +71,17 @@ function parseExcel(filePath) {
       return;
     }
 
-    // Skip if email is missing
-    if (!participant.email) {
-      skipped.push({
-        rowNumber: participant.rowNumber,
-        name: participant.name,
-        reason: "Email is missing",
-      });
-      return;
-    }
-
-    // Skip if template is invalid (must be 1, 2, or 3)
+    // Email is optional — only needed when sending via email
+    // (no skip for missing email)    // Skip if template is invalid (must be 1, 2, 3, or 4)
     if (
       isNaN(participant.template) ||
       participant.template < 1 ||
-      participant.template > 3
+      participant.template > 4
     ) {
       skipped.push({
         rowNumber: participant.rowNumber,
         name: participant.name,
-        reason: `Invalid template: "${rawTemplate || "(empty)"}". Expected Template1, Template2, or Template3.`,
+        reason: `Invalid template: "${rawTemplate || "(empty)"}". Expected Template1, Template2, Template3, or Template4.`,
       });
       return;
     }
@@ -100,6 +91,7 @@ function parseExcel(filePath) {
       1: "Technical",
       2: "Non-Technical",
       3: "Workshop",
+      4: "General",
     };
     participant.templateLabel = templateLabels[participant.template];
 
